@@ -1,0 +1,30 @@
+{
+    "name": "beyondchats-backend",
+    "version": "1.0.0",
+    "description": "Backend API for BeyondChats article scraper with CRUD operations",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "scrape": "node src/scripts/scrapeArticles.js"
+    },
+    "keywords": [
+        "web-scraper",
+        "api",
+        "mongodb",
+        "express"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.18.2",
+        "mongoose": "^8.0.3",
+        "axios": "^1.6.2",
+        "cheerio": "^1.0.0-rc.12",
+        "dotenv": "^16.3.1",
+        "cors": "^2.8.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}
