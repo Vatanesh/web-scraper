@@ -171,8 +171,21 @@ const scrapeAndStoreArticles = async (req, res) => {
                 const existing = await Article.findOne({ url: data.url });
 
                 if (existing) {
-                    console.log(`Article already exists: ${data.title}`);
-                    savedArticles.push(existing);
+                    // Update existing article with fresh content
+                    console.log(`Updating existing article: ${data.title}`);
+                    const updated = await Article.findByIdAndUpdate(
+                        existing._id,
+                        {
+                            title: data.title,
+                            content: data.content,
+                            excerpt: data.excerpt,
+                            author: data.author,
+                            publishedDate: data.publishedDate,
+                            metadata: data.metadata
+                        },
+                        { new: true }
+                    );
+                    savedArticles.push(updated);
                 } else {
                     const article = new Article(data);
                     const saved = await article.save();

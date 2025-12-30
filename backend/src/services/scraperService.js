@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 
 // Target articles identified from BeyondChats blog
 const TARGET_ARTICLES = [
@@ -11,22 +12,32 @@ const TARGET_ARTICLES = [
 ];
 
 /**
- * Scrape a single article from a URL
+ * Scrape a single article from a URL using Puppeteer (for JS-rendered content)
  * @param {string} url - The URL of the article to scrape
  * @returns {Promise<Object>} - Scraped article data
  */
 const scrapeArticle = async (url) => {
+    let browser;
     try {
-        console.log(`Scraping article: ${url}`);
+        console.log(`Scraping article with Puppeteer: ${url}`);
 
-        // Fetch the HTML content
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
+        // Launch browser
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
 
-        const html = response.data;
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+
+        // Navigate and wait for content
+        await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+        // Wait for article content to load
+        await page.waitForSelector('article, .post-content, main', { timeout: 10000 }).catch(() => { });
+
+        // Get the rendered HTML
+        const html = await page.content();
         const $ = cheerio.load(html);
 
         // Extract article data
@@ -38,6 +49,10 @@ const scrapeArticle = async (url) => {
     } catch (error) {
         console.error(`Error scraping ${url}:`, error.message);
         throw error;
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 };
 
@@ -55,35 +70,47 @@ const extractContent = ($, url) => {
 
     // Extract main content - try multiple selectors
     let content = '';
-    const contentSelectors = [
-        'article',
-        '.post-content',
-        '.entry-content',
-        '.article-content',
-        'main',
-        '.content'
-    ];
 
-    for (const selector of contentSelectors) {
-        const element = $(selector);
-        if (element.length > 0) {
-            // Remove script, style, nav, footer elements
-            element.find('script, style, nav, footer, .navigation, .comments').remove();
-            content = element.text().trim();
-            if (content.length > 100) break; // Good enough content found
-        }
+    // First, try to find the main article body
+    const articleBody = $('article .entry-content, article .post-content, .single-post-content, .blog-post-content');
+
+    if (articleBody.length > 0) {
+        // Remove unwanted elements
+        articleBody.find('script, style, nav, footer, .navigation, .comments, .sidebar, .related-posts, .share-buttons, aside, .comment-form').remove();
+
+        // Get all paragraphs from the article
+        const paragraphs = articleBody.find('p').map((i, el) => {
+            const text = $(el).text().trim();
+            // Filter out short paragraphs that are likely navigation/metadata
+            return text.length > 50 ? text : null;
+        }).get().filter(Boolean);
+
+        content = paragraphs.join('\n\n');
     }
 
-    // Fallback: extract all paragraph text
-    if (!content || content.length < 100) {
-        content = $('p').map((i, el) => $(el).text().trim()).get().join('\n\n');
+    // Fallback: extract all meaningful paragraph text from the page
+    if (!content || content.length < 200) {
+        const allParagraphs = $('p').map((i, el) => {
+            const text = $(el).text().trim();
+            // Only include substantial paragraphs
+            if (text.length > 50 &&
+                !text.includes('Comment') &&
+                !text.includes('Share') &&
+                !text.includes('Follow us')) {
+                return text;
+            }
+            return null;
+        }).get().filter(Boolean);
+
+        content = allParagraphs.join('\n\n');
     }
 
     // Extract excerpt (first 200 characters of content)
     const excerpt = content.substring(0, 200).trim() + '...';
 
     // Extract author if available
-    const author = $('.author').first().text().trim() ||
+    const author = $('.author-name').first().text().trim() ||
+        $('.author').first().text().trim() ||
         $('[rel="author"]').first().text().trim() ||
         $('meta[name="author"]').attr('content') ||
         'BeyondChats';
@@ -92,6 +119,7 @@ const extractContent = ($, url) => {
     let publishedDate = null;
     const dateText = $('time').first().attr('datetime') ||
         $('.published').first().text().trim() ||
+        $('.post-date').first().text().trim() ||
         $('meta[property="article:published_time"]').attr('content');
 
     if (dateText) {

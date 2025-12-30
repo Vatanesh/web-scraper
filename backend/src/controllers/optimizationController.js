@@ -26,19 +26,11 @@ const optimizeArticleById = async (req, res) => {
             });
         }
 
-        // Check if optimization already exists for this article
+        // Check if optimization already exists for this article (we'll update it if it does)
         const existingOptimized = await Article.findOne({
             originalArticleId: articleId,
             isOptimized: true
         });
-
-        if (existingOptimized) {
-            return res.status(200).json({
-                success: true,
-                message: 'Optimized version already exists',
-                data: existingOptimized
-            });
-        }
 
         console.log(`Starting optimization for: ${article.title}`);
 
@@ -97,25 +89,46 @@ const optimizeArticleById = async (req, res) => {
             url: ref.url
         }));
 
-        // Create new article object
-        const optimizedArticle = new Article({
-            title: `${article.title} (Optimized)`,
-            url: `${article.url}?optimized=true`,
-            content: optimizedContent,
-            excerpt: optimizedContent.substring(0, 200) + '...',
-            author: article.author,
-            publishedDate: article.publishedDate,
-            isOptimized: true,
-            originalArticleId: article._id,
-            references: formattedReferences,
-            metadata: {
-                optimizedAt: new Date().toISOString(),
-                llmModel: 'llama-3.3-70b-versatile',
-                referenceCount: formattedReferences.length
-            }
-        });
+        // Check if we need to update or create
+        let savedArticle;
+        if (existingOptimized) {
+            // Update existing optimized article
+            console.log('Updating existing optimized article...');
+            savedArticle = await Article.findByIdAndUpdate(
+                existingOptimized._id,
+                {
+                    content: optimizedContent,
+                    excerpt: optimizedContent.substring(0, 200) + '...',
+                    references: formattedReferences,
+                    metadata: {
+                        optimizedAt: new Date().toISOString(),
+                        llmModel: 'llama-3.3-70b-versatile',
+                        referenceCount: formattedReferences.length
+                    }
+                },
+                { new: true }
+            );
+        } else {
+            // Create new optimized article
+            const optimizedArticle = new Article({
+                title: `${article.title} (Optimized)`,
+                url: `${article.url}?optimized=true`,
+                content: optimizedContent,
+                excerpt: optimizedContent.substring(0, 200) + '...',
+                author: article.author,
+                publishedDate: article.publishedDate,
+                isOptimized: true,
+                originalArticleId: article._id,
+                references: formattedReferences,
+                metadata: {
+                    optimizedAt: new Date().toISOString(),
+                    llmModel: 'llama-3.3-70b-versatile',
+                    referenceCount: formattedReferences.length
+                }
+            });
 
-        const savedArticle = await optimizedArticle.save();
+            savedArticle = await optimizedArticle.save();
+        }
         console.log('✓ Optimized article saved successfully');
 
         res.status(201).json({

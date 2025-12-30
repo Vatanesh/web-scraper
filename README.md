@@ -46,15 +46,9 @@ web-scraper/
 │   │   ├── controllers/    # Route controllers
 │   │   ├── services/       # Business logic (scraper)
 │   │   └── server.js       # Express server
-│   ├── package.json
-│   ├── .env
-│   └── README.md
-│
-├── content-optimizer/       # Phase 2: AI Content Optimizer
-│   ├── src/
-│   │   ├── services/       # Google Search, Scraper, LLM, Publisher
-│   │   ├── utils/          # Logger utility
-│   │   └── index.js        # Main orchestration script
+│   ├── content-optimizer/  # Phase 2: Integrated AI optimizer
+│   │   └── src/
+│   │       └── services/   # Google Search, Scraper, LLM
 │   ├── package.json
 │   ├── .env
 │   └── README.md
@@ -68,6 +62,104 @@ web-scraper/
     ├── package.json
     ├── .env
     └── README.md (this file)
+```
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph Frontend["React Frontend :3000"]
+        UI[User Interface]
+        ArticleList[Article List]
+        ArticleDetail[Article Detail]
+        OptimizeBtn[Optimize Button]
+    end
+    
+    subgraph Backend["Express Backend :5000"]
+        API[REST API]
+        ArticleCtrl[Article Controller]
+        OptimizeCtrl[Optimization Controller]
+        Scraper[Scraper Service]
+        
+        subgraph ContentOpt["Content Optimizer"]
+            GoogleSearch[Google Search]
+            ContentScraper[Content Scraper]
+            LLM[LLM Optimizer]
+        end
+    end
+    
+    subgraph External["External Services"]
+        MongoDB[(MongoDB)]
+        Groq[Groq API<br/>Llama 3.3 70B]
+        Google[DuckDuckGo Search]
+        Web[Reference Sites]
+    end
+    
+    UI --> ArticleList
+    UI --> ArticleDetail
+    ArticleDetail --> OptimizeBtn
+    
+    ArticleList -->|GET /articles| API
+    ArticleDetail -->|GET /articles/:id| API
+    OptimizeBtn -->|POST /articles/:id/optimize| API
+    Scraper -->|POST /articles/scrape| API
+    
+    API --> ArticleCtrl
+    API --> OptimizeCtrl
+    OptimizeCtrl --> GoogleSearch
+    OptimizeCtrl --> ContentScraper
+    OptimizeCtrl --> LLM
+    
+    GoogleSearch --> Google
+    ContentScraper --> Web
+    LLM --> Groq
+    
+    ArticleCtrl --> MongoDB
+    OptimizeCtrl --> MongoDB
+    Scraper --> MongoDB
+    
+    style Frontend fill:#4a90e2,color:#fff
+    style Backend fill:#50c878,color:#fff
+    style ContentOpt fill:#9b59b6,color:#fff
+    style External fill:#e67e22,color:#fff
+```
+
+## 🔄 Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as React App
+    participant API as Backend API
+    participant DB as MongoDB
+    participant Opt as Content Optimizer
+    participant Groq as Groq LLM
+    
+    Note over User,Groq: Article Browsing
+    User->>UI: Open app
+    UI->>API: GET /articles
+    API->>DB: Fetch articles
+    DB-->>API: Return data
+    API-->>UI: Article list
+    UI-->>User: Display articles
+    
+    Note over User,Groq: Article Optimization
+    User->>UI: Click "Optimize"
+    UI->>API: POST /articles/:id/optimize
+    API->>DB: Fetch original
+    DB-->>API: Article data
+    API->>Opt: Search Google
+    Opt-->>API: Top 2 URLs
+    API->>Opt: Scrape content
+    Opt-->>API: Reference articles
+    API->>Opt: Optimize with LLM
+    Opt->>Groq: Send for optimization
+    Groq-->>Opt: Optimized content
+    Opt-->>API: Return optimized
+    API->>DB: Save/Update optimized article
+    DB-->>API: Success
+    API-->>UI: Optimized article
+    UI-->>User: Show success + link
 ```
 
 ## 🛠️ Prerequisites
