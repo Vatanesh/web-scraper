@@ -7,7 +7,7 @@ A comprehensive 3-phase full-stack application that scrapes articles, optimizes 
 https://articles-beyondchats.vercel.app/
 
 
-Note: The backend is hosted on Render and it may take a minute to wake up after being idle for a while.
+Note: The backend is hosted on Render and it may take a minute to wake up after being idle for a while. Please refresh after a minute if you don't see any articles.
 
 ## 🚀 Features
 
