@@ -13,16 +13,19 @@ A comprehensive 3-phase full-stack application that scrapes articles, optimizes 
 ### Phase 2: Content Optimizer
 - ✅ Google Search automation with Puppeteer
 - ✅ Web scraping of top-ranking articles
-- ✅ AI-powered content optimization using Google Gemini
+- ✅ AI-powered content optimization using Groq (Llama 3.3 70B)
 - ✅ Automatic citation and reference tracking
 - ✅ Smart content analysis and rewriting
+- ✅ **Integrated into backend API** for on-demand optimization
 
 ### Phase 3: React Frontend
 - ✅ Modern, responsive UI with dark mode
 - ✅ Article browsing with search and filtering
 - ✅ Detailed article view with formatted content
-- ✅ Side-by-side comparison of original vs optimized
+- ✅ **One-click article optimization** from UI
+- ✅ Real-time progress indicators during optimization
 - ✅ Premium design with glassmorphism and animations
+- ✅ Error handling and user feedback
 
 ## 📁 Project Structure
 
@@ -64,7 +67,7 @@ web-scraper/
 
 - **Node.js** v14 or higher
 - **MongoDB** (local or Atlas)
-- **Google Gemini API Key** ([Get one here](https://makersuite.google.com/app/apikey))
+- **Groq API Key** ([Get one free here](https://console.groq.com))
 
 ## 📦 Installation
 
@@ -87,7 +90,7 @@ npm install
 
 # Configure environment
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
+# Edit .env and add your GROQ_API_KEY
 ```
 
 ### 3. Install Frontend (Phase 3)
@@ -128,8 +131,16 @@ curl -X POST http://localhost:5000/api/articles/scrape
 
 This will scrape 5 articles from BeyondChats blog and store them in MongoDB.
 
-### Step 4: Run Content Optimizer (Optional)
+### Step 4: Optimize Articles
 
+**Option A: From the UI (Recommended)**
+1. Open the frontend at `http://localhost:3000`
+2. Click on any original article (without "Optimized" badge)
+3. Click the "✨ Optimize Article" button
+4. Wait 30-60 seconds while it processes
+5. View the optimized version with references
+
+**Option B: Command Line (Batch Processing)**
 ```bash
 cd content-optimizer
 npm start
@@ -139,7 +150,7 @@ This will:
 1. Fetch original articles from the API
 2. Search Google for each article title
 3. Scrape top 2 ranking articles
-4. Use Gemini AI to optimize the content
+4. Use Groq AI (Llama 3.3 70B) to optimize the content
 5. Publish optimized versions with citations
 
 ### Step 5: Start React Frontend
@@ -164,12 +175,16 @@ Frontend will start on `http://localhost:3000`
 - Author and metadata display
 - References section for optimized articles
 - Link back to original version
+- **"Optimize Article" button** on original articles
 
 ### Content Optimization
+- **One-click optimization** from article detail page
+- Real-time progress indicators (Searching, Scraping, AI Analysis)
 - AI analyzes top-ranking Google results
-- Rewrites content with improved structure
+- Rewrites content with improved structure  
 - Maintains factual accuracy
 - Adds proper citations
+- Success/error feedback with user-friendly messages
 
 ## 🔧 API Endpoints
 
@@ -181,6 +196,7 @@ Frontend will start on `http://localhost:3000`
 - `POST /api/articles` - Create article
 - `PUT /api/articles/:id` - Update article
 - `DELETE /api/articles/:id` - Delete article
+- `POST /api/articles/:id/optimize` - **Optimize an article with AI**
 
 ### Query Parameters:
 - `isOptimized=true|false` - Filter by optimization status
@@ -198,7 +214,7 @@ NODE_ENV=development
 
 ### Content Optimizer (.env)
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 BACKEND_API_URL=http://localhost:5000/api
 ```
 
@@ -231,8 +247,11 @@ curl http://localhost:5000/api/articles/<article_id>
 ## 📝 Notes
 
 - The scraper targets 5 specific BeyondChats articles
-- Content optimizer processes one article at a time by default
+- Content optimizer can run standalone or via API endpoint
+- **One-click optimization** available from the UI
+- Optimization takes ~30-60 seconds per article
 - Puppeteer uses stealth mode to avoid Google detection
+- Uses Groq's Llama 3.3 70B model (fast and free)
 - Premium UI design with dark mode and glassmorphism effects
 - Fully responsive for mobile, tablet, and desktop
 
@@ -243,9 +262,15 @@ curl http://localhost:5000/api/articles/<article_id>
 - Verify MONGODB_URI in .env
 
 **Content Optimizer fails:**
-- Verify GEMINI_API_KEY is valid
+- Verify GROQ_API_KEY is valid in content-optimizer/.env
 - Check backend API is running
 - Google may block automated searches (use VPN or delays)
+- Ensure timeout is set to 120000ms in frontend api.js
+
+**Optimization button shows error:**
+- Check backend logs for detailed error messages
+- Verify Groq API key is properly configured
+- Ensure article exists and is not already optimized
 
 **Frontend shows no articles:**
 - Verify backend is running on port 5000
@@ -265,6 +290,13 @@ Built as a demonstration of modern full-stack development with AI integration.
 **Stack:**
 - Backend: Node.js, Express, MongoDB, Mongoose
 - Scraping: Axios, Cheerio, Puppeteer
-- AI: Google Gemini API
-- Frontend: React, React Router
+- AI: Groq API (Llama 3.3 70B Versatile)
+- Frontend: React, React Router, Axios
 - Styling: Custom CSS with modern design patterns
+
+**Key Features:**
+- ✨ One-click AI optimization from UI
+- 🚀 Fast processing with Groq's infrastructure
+- 📊 Real-time progress indicators
+- 🎨 Premium, responsive design
+- 🔍 Smart Google search integration

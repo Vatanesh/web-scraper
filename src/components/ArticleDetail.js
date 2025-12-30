@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchArticleById } from '../services/api';
+import { fetchArticleById, optimizeArticle } from '../services/api';
 import '../styles/articles.css';
 
 const ArticleDetail = () => {
@@ -9,6 +9,9 @@ const ArticleDetail = () => {
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [optimizing, setOptimizing] = useState(false);
+    const [optimizeError, setOptimizeError] = useState(null);
+    const [optimizeSuccess, setOptimizeSuccess] = useState(null);
 
     useEffect(() => {
         loadArticle();
@@ -23,6 +26,22 @@ const ArticleDetail = () => {
             setError('Failed to load article');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOptimize = async () => {
+        try {
+            setOptimizing(true);
+            setOptimizeError(null);
+            setOptimizeSuccess(null);
+
+            const optimizedArticle = await optimizeArticle(id);
+
+            setOptimizeSuccess(optimizedArticle);
+        } catch (err) {
+            setOptimizeError(err.response?.data?.error || 'Failed to optimize article. Please try again.');
+        } finally {
+            setOptimizing(false);
         }
     };
 
@@ -119,6 +138,60 @@ const ArticleDetail = () => {
                         <a href={article.url} target="_blank" rel="noopener noreferrer" className="source-link">
                             View original source ↗
                         </a>
+                    </div>
+                )}
+
+                {/* Optimization Section - Only for Original Articles */}
+                {!article.isOptimized && !optimizeSuccess && (
+                    <div className="optimization-section">
+                        <div className="optimization-card">
+                            <h3>✨ Optimize This Article</h3>
+                            <p>
+                                Create an AI-optimized version using Google search analysis and LLM processing.
+                                This will take approximately 30-60 seconds.
+                            </p>
+
+                            {optimizeError && (
+                                <div className="optimize-error">
+                                    ❌ {optimizeError}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleOptimize}
+                                disabled={optimizing}
+                                className="btn-optimize"
+                            >
+                                {optimizing ? (
+                                    <>
+                                        <span className="spinner-small"></span>
+                                        Optimizing... Please wait
+                                    </>
+                                ) : (
+                                    '✨ Optimize Article'
+                                )}
+                            </button>
+
+                            {optimizing && (
+                                <div className="optimization-progress">
+                                    <div className="progress-step">🔍 Searching Google for top articles...</div>
+                                    <div className="progress-step">📄 Scraping reference content...</div>
+                                    <div className="progress-step">🤖 Analyzing with AI...</div>
+                                    <div className="progress-step">💾 Creating optimized version...</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Success Message */}
+                {optimizeSuccess && (
+                    <div className="optimize-success">
+                        <h3>🎉 Optimization Complete!</h3>
+                        <p>Your article has been successfully optimized.</p>
+                        <Link to={`/article/${optimizeSuccess._id}`} className="btn-view-optimized">
+                            View Optimized Article →
+                        </Link>
                     </div>
                 )}
             </article>

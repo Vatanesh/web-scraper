@@ -8,9 +8,13 @@ const {
     deleteArticle,
     scrapeAndStoreArticles
 } = require('../controllers/articleController');
+const { optimizeArticleById } = require('../controllers/optimizationController');
 
 // Scraping route
 router.post('/scrape', scrapeAndStoreArticles);
+
+// Optimization route
+router.post('/:id/optimize', optimizeArticleById);
 
 // CRUD routes
 router.post('/', createArticle);
