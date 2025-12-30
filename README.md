@@ -132,7 +132,7 @@ sequenceDiagram
     participant UI as React App
     participant API as Backend API
     participant DB as MongoDB
-    participant Opt as Content Optimizer
+    participant Optimizer as Content Optimizer
     participant Groq as Groq LLM
     
     Note over User,Groq: Article Browsing
@@ -149,14 +149,14 @@ sequenceDiagram
     API->>DB: Fetch original
     DB-->>API: Article data
     
-    API->>Opt: Search Google
-    Opt-->>API: Top 2 URLs
-    API->>Opt: Scrape content
-    Opt-->>API: Reference articles
-    API->>Opt: Optimize with LLM
-    Opt->>Groq: Send for optimization
-    Groq-->>Opt: Optimized content
-    Opt-->>API: Return optimized
+    API->>Optimizer: Search Google
+    Optimizer-->>API: Top 2 URLs
+    API->>Optimizer: Scrape content
+    Optimizer-->>API: Reference articles
+    API->>Optimizer: Optimize with LLM
+    Optimizer->>Groq: Send for optimization
+    Groq-->>Optimizer: Optimized content
+    Optimizer-->>API: Return optimized
     API->>DB: Save/Update optimized article
     DB-->>API: Success
     API-->>UI: Optimized article
