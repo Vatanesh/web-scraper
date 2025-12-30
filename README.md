@@ -148,6 +148,7 @@ sequenceDiagram
     UI->>API: POST /articles/:id/optimize
     API->>DB: Fetch original
     DB-->>API: Article data
+    
     API->>Opt: Search Google
     Opt-->>API: Top 2 URLs
     API->>Opt: Scrape content
