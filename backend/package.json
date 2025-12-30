@@ -6,7 +6,8 @@
     "scripts": {
         "start": "node src/server.js",
         "dev": "nodemon src/server.js",
-        "scrape": "node src/scripts/scrapeArticles.js"
+        "scrape": "node src/scripts/scrapeArticles.js",
+        "postinstall": "node node_modules/puppeteer/install.js"
     },
     "keywords": [
         "web-scraper",
