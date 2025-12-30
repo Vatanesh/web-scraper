@@ -2,6 +2,13 @@
 
 A comprehensive 3-phase full-stack application that scrapes articles, optimizes them using AI, and displays them in a beautiful React UI.
 
+## Live Demo
+
+https://articles-beyondchats.vercel.app/
+
+
+Note: The backend is hosted on Render and it may take a minute to wake up after being idle for a while.
+
 ## 🚀 Features
 
 ### Phase 1: Backend API
