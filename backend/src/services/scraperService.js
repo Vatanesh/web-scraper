@@ -70,40 +70,72 @@ const scrapeArticle = async (url) => {
  * @returns {Object} - Extracted article data
  */
 const extractContent = ($, url) => {
-    // Extract title
-    const title = $('h1').first().text().trim() ||
+    // Extract title - try BeyondChats-specific selectors first
+    const title = $('h1.elementor-heading-title').first().text().trim() ||
+        $('h1').first().text().trim() ||
         $('title').text().trim() ||
         'Untitled Article';
 
-    // Extract main content - try multiple selectors
+    // CRITICAL: Remove comments section before extracting content
+    $('#comments').remove();
+    $('.ct-comment-list').remove();
+    $('.comment').remove();
+    $('.comments-area').remove();
+    $('#disqus_thread').remove();
+
+    // Extract main content - BeyondChats uses Elementor
     let content = '';
 
-    // First, try to find the main article body
-    const articleBody = $('article .entry-content, article .post-content, .single-post-content, .blog-post-content');
+    // Primary selector for BeyondChats (Elementor-based)
+    const beyondChatsContent = $('.elementor-widget-theme-post-content');
 
-    if (articleBody.length > 0) {
+    if (beyondChatsContent.length > 0) {
         // Remove unwanted elements
-        articleBody.find('script, style, nav, footer, .navigation, .comments, .sidebar, .related-posts, .share-buttons, aside, .comment-form').remove();
+        beyondChatsContent.find('script, style, nav, footer, .navigation, .sidebar, .related-posts, .share-buttons, aside').remove();
 
         // Get all paragraphs from the article
-        const paragraphs = articleBody.find('p').map((i, el) => {
+        const paragraphs = beyondChatsContent.find('p').map((i, el) => {
             const text = $(el).text().trim();
-            // Filter out short paragraphs that are likely navigation/metadata
-            return text.length > 50 ? text : null;
+            // Filter out short paragraphs and comment-like content
+            if (text.length > 30 &&
+                !text.toLowerCase().includes('view original source') &&
+                !text.toLowerCase().includes('optimize this article')) {
+                return text;
+            }
+            return null;
         }).get().filter(Boolean);
 
         content = paragraphs.join('\n\n');
     }
 
-    // Fallback: extract all meaningful paragraph text from the page
+    // Fallback: Try generic article selectors
+    if (!content || content.length < 200) {
+        const articleBody = $('article .entry-content, article .post-content, .single-post-content, .blog-post-content, .post-body');
+
+        if (articleBody.length > 0) {
+            // Remove unwanted elements
+            articleBody.find('script, style, nav, footer, .navigation, .sidebar, .related-posts, .share-buttons, aside').remove();
+
+            const paragraphs = articleBody.find('p').map((i, el) => {
+                const text = $(el).text().trim();
+                return text.length > 30 ? text : null;
+            }).get().filter(Boolean);
+
+            content = paragraphs.join('\n\n');
+        }
+    }
+
+    // Last resort: extract all meaningful paragraph text from the page
     if (!content || content.length < 200) {
         const allParagraphs = $('p').map((i, el) => {
             const text = $(el).text().trim();
-            // Only include substantial paragraphs
+            // Only include substantial paragraphs, exclude comment indicators
             if (text.length > 50 &&
                 !text.includes('Comment') &&
                 !text.includes('Share') &&
-                !text.includes('Follow us')) {
+                !text.includes('Follow us') &&
+                !text.toLowerCase().includes('view original source') &&
+                !text.toLowerCase().includes('optimize this article')) {
                 return text;
             }
             return null;
@@ -115,16 +147,19 @@ const extractContent = ($, url) => {
     // Extract excerpt (first 200 characters of content)
     const excerpt = content.substring(0, 200).trim() + '...';
 
-    // Extract author if available
-    const author = $('.author-name').first().text().trim() ||
+    // Extract author - BeyondChats-specific selectors first
+    const author = $('.elementor-post-info__item--type-author .elementor-icon-list-text').first().text().trim() ||
+        $('.author-name').first().text().trim() ||
         $('.author').first().text().trim() ||
         $('[rel="author"]').first().text().trim() ||
         $('meta[name="author"]').attr('content') ||
         'BeyondChats';
 
-    // Extract published date if available
+    // Extract published date - BeyondChats-specific selectors first
     let publishedDate = null;
-    const dateText = $('time').first().attr('datetime') ||
+    const dateText = $('.elementor-post-info__item--type-date time').first().text().trim() ||
+        $('time').first().attr('datetime') ||
+        $('time').first().text().trim() ||
         $('.published').first().text().trim() ||
         $('.post-date').first().text().trim() ||
         $('meta[property="article:published_time"]').attr('content');
