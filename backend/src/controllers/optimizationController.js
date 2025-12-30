@@ -43,9 +43,9 @@ const optimizeArticleById = async (req, res) => {
         console.log(`Starting optimization for: ${article.title}`);
 
         // Dynamically import content-optimizer services
-        const { searchGoogle, extractTopTwoLinks } = require('../../../content-optimizer/src/services/googleSearch');
-        const { scrapeArticleContent } = require('../../../content-optimizer/src/services/contentScraper');
-        const { optimizeArticle } = require('../../../content-optimizer/src/services/llmOptimizer');
+        const { searchGoogle, extractTopTwoLinks } = require('../../content-optimizer/src/services/googleSearch');
+        const { scrapeArticleContent } = require('../../content-optimizer/src/services/contentScraper');
+        const { optimizeArticle } = require('../../content-optimizer/src/services/llmOptimizer');
 
         // Step 2: Search Google for article title
         console.log('Searching Google for top-ranking articles...');
