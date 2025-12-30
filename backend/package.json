@@ -24,7 +24,7 @@
         "dotenv": "^16.3.1",
         "cors": "^2.8.5",
         "groq-sdk": "^0.37.0",
-        "puppeteer": "19.11.1",
+        "puppeteer": "21.5.2",
         "puppeteer-extra": "^3.3.6",
         "puppeteer-extra-plugin-stealth": "^2.11.2"
     },

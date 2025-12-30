@@ -24,6 +24,7 @@ const scrapeArticle = async (url) => {
         // Launch browser
         browser = await puppeteer.launch({
             headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
