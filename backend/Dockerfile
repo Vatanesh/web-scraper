@@ -5,9 +5,23 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+# Switch to root to fix permissions
+USER root
+
+# Change ownership of the working directory
+RUN chown -R pptruser:pptruser /usr/src/app
+
+# Switch back to pptruser
+USER pptruser
+
+# Copy package files with correct ownership
+COPY --chown=pptruser:pptruser package*.json ./
+
+# Install dependencies
 RUN npm install
 
-COPY . .
+# Copy application files with correct ownership
+COPY --chown=pptruser:pptruser . .
 
+# Start the application
 CMD [ "npm", "start" ]
